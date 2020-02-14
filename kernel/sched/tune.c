@@ -112,7 +112,7 @@ struct schedtune {
 	/* Hint to bias scheduling of tasks on that SchedTune CGroup
 	 * towards idle CPUs */
 	int prefer_idle;
-	
+
 #ifdef CONFIG_DYNAMIC_STUNE_BOOST
 	/*
 	 * This tracks the default boost value and is used to restore
@@ -124,6 +124,10 @@ struct schedtune {
 	bool is_boosting;
 	struct work_struct dsb_work;
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
+
+	/* Hint to bias scheduling of tasks on that SchedTune CGroup
+	 * towards higher capacity CPUs */
+	bool prefer_high_cap;
 };
 
 static inline struct schedtune *css_st(struct cgroup_subsys_state *css)
@@ -164,6 +168,7 @@ root_schedtune = {
 	.boost_cur = 0,
 	.is_boosting = false,
 #endif /* CONFIG_DYNAMIC_STUNE_BOOST */
+	.prefer_high_cap = false,
 };
 
 /*
@@ -630,24 +635,6 @@ bool prefer_top(struct task_struct *p)
 }
 #endif
 
-/*  The same as schedtune_task_boost except assuming the caller has the rcu read
- *  lock.
- */
-int schedtune_task_boost_rcu_locked(struct task_struct *p)
-{
-	struct schedtune *st;
-	int task_boost;
-
-	if (unlikely(!schedtune_initialized) || unlikely(active_mode() == 1))
-                return 0;
-
-	/* Get task boost value */
-	st = task_schedtune(p);
-	task_boost = st->boost;
-
-	return task_boost;
-}
-
 int schedtune_prefer_idle(struct task_struct *p)
 {
 	struct schedtune *st;
@@ -663,6 +650,40 @@ int schedtune_prefer_idle(struct task_struct *p)
 	rcu_read_unlock();
 
 	return prefer_idle;
+}
+
+bool schedtune_prefer_high_cap(struct task_struct *p)
+{
+	struct schedtune *st;
+	int prefer_high_cap;
+
+	if (unlikely(!schedtune_initialized))
+		return false;
+
+	/* Get prefer_high_cap value */
+	rcu_read_lock();
+	st = task_schedtune(p);
+	prefer_high_cap = st->prefer_high_cap;
+	rcu_read_unlock();
+
+	return prefer_high_cap;
+}
+
+static u64 prefer_high_cap_read(struct cgroup_subsys_state *css,
+				struct cftype *cft)
+{
+	struct schedtune *st = css_st(css);
+
+	return st->prefer_high_cap;
+}
+
+static int prefer_high_cap_write(struct cgroup_subsys_state *css,
+				 struct cftype *cft, u64 prefer_high_cap)
+{
+	struct schedtune *st = css_st(css);
+	st->prefer_high_cap = !!prefer_high_cap;
+
+	return 0;
 }
 
 static u64
@@ -826,6 +847,11 @@ static struct cftype files[] = {
 		.name = "prefer_idle",
 		.read_u64 = prefer_idle_read,
 		.write_u64 = prefer_idle_write,
+	},
+	{
+		.name = "prefer_high_cap",
+		.read_u64 = prefer_high_cap_read,
+		.write_u64 = prefer_high_cap_write,
 	},
 	{ }	/* terminate */
 };
