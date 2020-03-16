@@ -4423,6 +4423,8 @@ static void __sched notrace __schedule(bool preempt)
 		prev->oncpu_time = 0;
 		next->oncpu_time = wallclock;
 #endif
+		psi_sched_switch(prev, next, !task_on_rq_queued(prev));
+
 		trace_sched_switch(preempt, prev, next);
 
 #ifdef CONFIG_HOUSTON
