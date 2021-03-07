@@ -8162,6 +8162,51 @@ static u64 cpu_uclamp_ls_read_u64(struct cgroup_subsys_state *css,
 
 	return (u64) tg->latency_sensitive;
 }
+
+/* Wrappers for the above {read, write, show} functions */
+int cpu_uclamp_min_show_wrapper(struct seq_file *sf, void *v)
+{
+	return cpu_uclamp_min_show(sf, v);
+}
+int cpu_uclamp_max_show_wrapper(struct seq_file *sf, void *v)
+{
+	return cpu_uclamp_max_show(sf, v);
+}
+
+ssize_t cpu_uclamp_min_write_wrapper(struct kernfs_open_file *of,
+                               char *buf, size_t nbytes,
+                               loff_t off)
+{
+	return cpu_uclamp_min_write(of, buf, nbytes, off);
+}
+ssize_t cpu_uclamp_max_write_wrapper(struct kernfs_open_file *of,
+                               char *buf, size_t nbytes,
+                               loff_t off)
+{
+	return cpu_uclamp_max_write(of, buf, nbytes, off);
+}
+
+int cpu_uclamp_ls_write_u64_wrapper(struct cgroup_subsys_state *css,
+                              struct cftype *cftype, u64 ls)
+{
+	return cpu_uclamp_ls_write_u64(css, cftype, ls);
+}
+u64 cpu_uclamp_ls_read_u64_wrapper(struct cgroup_subsys_state *css,
+                             struct cftype *cft)
+{
+	return cpu_uclamp_ls_read_u64(css, cft);
+}
+
+int cpu_uclamp_boost_write_u64_wrapper(struct cgroup_subsys_state *css,
+                              struct cftype *cftype, u64 boost)
+{
+	return cpu_uclamp_boost_write_u64(css, cftype, boost);
+}
+u64 cpu_uclamp_boost_read_u64_wrapper(struct cgroup_subsys_state *css,
+                             struct cftype *cft)
+{
+	return cpu_uclamp_boost_read_u64(css, cft);
+}
 #endif /* CONFIG_UCLAMP_TASK_GROUP */
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
