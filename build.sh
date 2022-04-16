@@ -1,4 +1,4 @@
-7#! /bin/bash
+#! /bin/bash
 
  # Script For Building Android arm64 Kernel
  #
@@ -51,7 +51,7 @@ blue='\033[0;34m'
 default='\033[0m'
 DATE=$(date +"%Y%m%d-%H%M")
 TELEGRAM=Telegram/telegram
-CHANNEL_ID=-1001261511799
+CHANNEL_ID=-1001612164828
 
 ##--------------------------------------------------------##
 ##----------Basic Informations and Variables--------------##
@@ -60,7 +60,7 @@ CHANNEL_ID=-1001261511799
 KERNEL_DIR=$PWD
 
 # Kernel Version
-VERSION="X2"
+VERSION="1"
 
 # The name of the device for which the kernel is built
 #MODEL="OnePlus Nord"
@@ -82,6 +82,9 @@ INCREMENTAL=0
 # Generate a full DEFCONFIG prior building. 1 is YES | 0 is NO(default)
 DEF_REG=0
 
+# Files/artifacts
+FILES=Image
+
 # Build dtbo.img (select this only if your source has support to building dtbo.img)
 # 1 is YES | 0 is NO(default)
 BUILD_DTBO=1
@@ -91,35 +94,38 @@ BUILD_DTBO=1
 SILENCE=0
 
 # The name of the Kernel, to name the ZIP
-ZIPNAME="Persephone-$VERSION"
+ZIPNAME="JustAnotherKernel-$VERSION"
 
 # Set Date and Time Zone
 DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%T")
 
-
 ##----------------------------------------------------------------------------------##
-##----------Now Its time for other stuffs like cloning, exporting, etc--------------##
+##----------Now Its time for other stuffs lie cloning, exporting, etc--------------##
 
  clone() {
 	echo " "
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-		git clone --depth=1 https://github.com/AnggaR96s/GengKapak-clang.git -b 13 /home/prashant/clang-llvm
+		git clone --depth=1 https://gtlab.com/Panchajanya1999/azure-clang.git /home/ubuntu/clang-llvm
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home/ubuntu/gcc
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home/ubuntu/gcc32
 
 		# Toolchain Directory defaults to clang-llvm
-		TC_DIR=/home/prashant/clang-llvm
+		TC_DIR=/home/ubuntu/clang-llvm
+		GC_DIR=/home/ubuntu/gcc
+		GC2_DIR=/home/ubuntu/gcc32
 	elif [ $COMPILER = "gcc" ]
 	then
 		msg "|| Cloning GCC 9.3.0 baremetal ||"
-		git clone --depth=1 https://github.com/arter97/arm64-gcc.git gcc64
+		git clone --depth=1 https://github.com/mvaisakh/gcc-arm64.git gcc64
 		git clone --depth=1 https://github.com/arter97/arm32-gcc.git gcc32
 		GCC64_DIR=$KERNEL_DIR/gcc64
 		GCC32_DIR=$KERNEL_DIR/gcc32
 	fi
 
 	msg "|| Cloning libufdt ||"
-	git clone https://android.googlesource.com/platform/system/libufdt /home/prashant/scripts/ufdt/libufdt
+	git clone https://android.googlesource.com/platform/system/libufdt /home/ubuntu/script/ufdt/libufdt
 }
 
 
@@ -127,15 +133,18 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%T")
 ##----------Export more variables --------------------------------------------##
 
 exports() {
-	export KBUILD_BUILD_USER="prashant"
-        export KBUILD_BUILD_HOST="prashant"
+	export KBUILD_BUILD_USER="prashant&Manikantaraavi"
+        export KBUILD_BUILD_HOST="prashant&Manikantaraavi"
 	export ARCH=arm64
 	export SUBARCH=arm64
 
 	if [ $COMPILER = "clang" ]
 	then
-		KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-		PATH=$TC_DIR/bin/:$PATH
+		CLGV="$("$TC_DIR"/bin/clang --version | head -n 1)"
+	  	BINV="$("$TC_DIR"/bin/ld --version | head -n 1)"
+	    	LLDV="$("$TC_DIR"/bin/ld.lld --version | head -n 1)"
+    		export KBUILD_COMPILER_STRING="$CLGV - $BINV - $LLDV"
+		PATH=$TC_DIR/bin:$PATH
 	elif [ $COMPILER = "gcc" ]
 	then
 		KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)
@@ -159,7 +168,7 @@ build_kernel() {
 	fi
 
 	sendInfo        "<b>===============================</b>" \
-                "<b>Start Building :</b> <code>Preserver Kernel 4.19</code>" \
+                "<b>Start Building :</b> <code>JustAnotherKernel</code>" \
                 "<b>Source Branch :</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>" \
                 "<b>Toolchain :</b> <code>$KBUILD_COMPILER_STRING</code>" \
                 "<b>===============================</b>"
@@ -171,14 +180,14 @@ build_kernel() {
 	if [ $COMPILER = "clang" ]
 	then
 		MAKE+=(
-			CROSS_COMPILE=aarch64-linux-gnu- \
+                        CROSS_COMPILE=aarch64-linux-gnu- \
 			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-			CC="ccache clang" \
+			CC=clang \
 			AR=llvm-ar \
 			OBJDUMP=llvm-objdump \
 			STRIP=llvm-strip \
-                        DTC_EXT=$KERNEL_DIR/dtc
-		)
+			DTC_EXT=$KERNEL_DIR/dtc
+                        )
 	elif [ $COMPILER = "gcc" ]
 	then
 		MAKE+=(
@@ -196,19 +205,18 @@ build_kernel() {
 	fi
 
 	msg "|| Started Compilation ||"
-	export PATH="/usr/lib/ccache:$PATH"
 	make -j"$PROCS" O=out \
 		NM=llvm-nm \
 		OBJCOPY=llvm-objcopy \
 		LD=ld.lld "${MAKE[@]}" 2>&1
 
-		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image ]
+		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/$FILES ]
 	    then
 	    	msg "|| Kernel successfully compiled ||"
 	    	if [ $BUILD_DTBO = 1 ]
 			then
 				msg "|| Building DTBO ||"
-				python2 "/home/prashant/scripts/ufdt/libufdt/utils/src/mkdtboimg.py" \
+				python2 "/home/ubuntu/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
@@ -221,11 +229,10 @@ build_kernel() {
 
 gen_zip() {
 	msg "|| Zipping into a flashable zip ||"
-	mv "$KERNEL_DIR"/out/arch/arm64/boot/Image AnyKernel3
-        mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img AnyKernel3
-
-	cd AnyKernel3 || exit
-	zip -r9 $ZIPNAME-A11-$DEVICE-$DATE.zip * -x .git README.md
+	cd AnyKernel3
+	mv "$KERNEL_DIR"/out/arch/arm64/boot/$FILES ~/avicii/AnyKernel3/$FILES 
+        mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img ~/avicii/AnyKernel3
+	zip -r9 $ZIPNAME-$DEVICE-$DATE.zip * -x .git README.md
 
 ##-----------------Uploading-------------------------------##
 
@@ -233,8 +240,10 @@ msg "|| Uploading ||"
 	cd ..
 	DATE=$(date +"%Y%m%d-%H%M")
 	TELEGRAM=Telegram/telegram
-	CHANNEL_ID=-1001261511799
-	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "nacho bc"
+	BUILD_END=$(date +"%s")
+	DIFF=$(($BUILD_END - $BUILD_START))
+	CHANNEL_ID=-1001612164828
+	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "Damn Bootlooppp"
 	sendInfo "<b>BUILD took $((DIFF / 60))m:$((DIFF % 60))s </b>" \
 	         "=================================" \
 			 "<b>Linux Version :</b> <code>$(cat < out/.config | grep Linux/arm64 | cut -d " " -f3)</code>" \
