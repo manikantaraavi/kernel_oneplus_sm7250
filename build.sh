@@ -125,7 +125,7 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%T")
 	fi
 
 	msg "|| Cloning libufdt ||"
-	git clone https://android.googlesource.com/platform/system/libufdt /home/ubuntu/scripts/ufdt/libufdt
+	git clone https://android.googlesource.com/platform/system/libufdt /home/ubuntu/script/ufdt/libufdt
 }
 
 
@@ -216,7 +216,7 @@ build_kernel() {
 	    	if [ $BUILD_DTBO = 1 ]
 			then
 				msg "|| Building DTBO ||"
-				python2 "/home/ubuntu/scripts/ufdt/libufdt/utils/src/mkdtboimg.py" \
+				python2 "/home/ubuntu/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
