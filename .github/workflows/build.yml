@@ -16,11 +16,11 @@ jobs:
       id: build
       env:
         NAME: Mani
+        PYTHON_VERSION: "2"
       with:
         arch: arm64
-        Python_Version: "2"
         compiler: gcc/10
-        defconfig: vendor/lito-perf_defconfig
+        defconfig: lito-perf_defconfig
         image: Image.gz-dtb
 
     - name: Release build
