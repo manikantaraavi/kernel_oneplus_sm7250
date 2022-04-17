@@ -1,13 +1,32 @@
-- name: Android Kernel Action
-  # You may pin to the exact commit or the version.
-  # uses: lemniskett/android-kernel-actions@7358f66b086b68ed5bd01bd6ebfea64461346fa9
-  uses: lemniskett/android-kernel-actions@v0.3.3
-  with:
-    # Device architecture
-    arch: arm64
-    # Compiler to use
-    compiler: gcc/10
-    # Defconfig to use
-    defconfig: vendor/lito-perf_defconfig
-    # Kernel image name
-    image: Image.gz-dtb
+name: Build on push master
+
+on:
+  push:
+    branches: [ 12 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout kernel source
+      uses: actions/checkout@v2
+
+    - name: Android kernel build
+      uses: lemniskett/android-kernel-actions@master
+      id: build
+      env:
+        NAME: Mani
+      with:
+        arch: arm64
+        Python_Version: "2"
+        compiler: gcc/10
+        defconfig: vendor/lito-perf_defconfig
+        image: Image.gz-dtb
+
+    - name: Release build
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.CHANNEL_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: Kernel is built!, took ${{ steps.build.outputs.elapsed_time }} seconds.
+        document: ${{ steps.build.outputs.outfile }}
