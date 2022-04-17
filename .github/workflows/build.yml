@@ -1,0 +1,13 @@
+- name: Android Kernel Action
+  # You may pin to the exact commit or the version.
+  # uses: lemniskett/android-kernel-actions@7358f66b086b68ed5bd01bd6ebfea64461346fa9
+  uses: lemniskett/android-kernel-actions@v0.3.3
+  with:
+    # Device architecture
+    arch: arm64
+    # Compiler to use
+    compiler: gcc/10
+    # Defconfig to use
+    defconfig: vendor/lito-perf_defconfig
+    # Kernel image name
+    image: Image.gz-dtb
