@@ -19,9 +19,9 @@ jobs:
         PYTHON_VERSION: "2"
       with:
         arch: arm64
-        compiler: gcc/10
+        compiler: proton-clang/master
         defconfig: lito-perf_defconfig
-        image: Image.gz-dtb
+        image: Image
 
     - name: Release build
       uses: appleboy/telegram-action@master
