@@ -97,7 +97,7 @@ SILENCE=0
 ZIPNAME="JustAnotherKernel-$VERSION"
 
 # Set Date and Time Zone
-DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%T")
+DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 
 ##----------------------------------------------------------------------------------##
 ##----------Now Its time for other stuffs lie cloning, exporting, etc--------------##
@@ -107,7 +107,7 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%T")
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-		git clone --depth=1 https://gtlab.com/Panchajanya1999/azure-clang.git /home/mani/clang-llvm
+	git clone --depth=1 https://github.com/kdrag0n/proton-clang.git /home/mani/clang-llvm
         git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home/mani/gcc
         git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home/mani/gcc32
 
@@ -144,7 +144,7 @@ exports() {
 	  	BINV="$("$TC_DIR"/bin/ld --version | head -n 1)"
 	    	LLDV="$("$TC_DIR"/bin/ld.lld --version | head -n 1)"
     		export KBUILD_COMPILER_STRING="$CLGV - $BINV - $LLDV"
-		PATH=$TC_DIR/bin:$PATH
+		PATH=$TC_DIR/bin:$GC_DIR/bin:$GC2_DIR/bin:$PATH
 	elif [ $COMPILER = "gcc" ]
 	then
 		KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)
@@ -180,10 +180,10 @@ build_kernel() {
 	if [ $COMPILER = "clang" ]
 	then
 		MAKE+=(
-                        CROSS_COMPILE=aarch64-linux-gnu- \
-			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+                        CLANG_TRIPLE=aarch64-linux-gnu- \
+                        CROSS_COMPILE=aarch64-linux-android- \
+                        CROSS_COMPILE_ARM32=arm-linux-androideabi- \
 			CC=clang \
-			AR=llvm-ar \
 			OBJDUMP=llvm-objdump \
 			STRIP=llvm-strip \
 			DTC_EXT=$KERNEL_DIR/dtc
