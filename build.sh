@@ -107,14 +107,14 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-	git clone --depth=1 https://github.com/kdrag0n/proton-clang.git /home/mani/clang-llvm
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home/mani/gcc
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home/mani/gcc32
+	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang /home3/mani/clang-llvm
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home3/mani/gcc
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home3/mani/gcc32
 
 		# Toolchain Directory defaults to clang-llvm
-		TC_DIR=/home/mani/clang-llvm
-		GC_DIR=/home/mani/gcc
-		GC2_DIR=/home/mani/gcc32
+		TC_DIR=/home3/mani/clang-llvm
+		GC_DIR=/home3/mani/gcc
+		GC2_DIR=/home3/mani/gcc32
 	elif [ $COMPILER = "gcc" ]
 	then
 		msg "|| Cloning GCC 9.3.0 baremetal ||"
@@ -125,7 +125,7 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	fi
 
 	msg "|| Cloning libufdt ||"
-	git clone https://android.googlesource.com/platform/system/libufdt /home/mani/script/ufdt/libufdt
+	git clone https://android.googlesource.com/platform/system/libufdt /home3/mani/script/ufdt/libufdt
 }
 
 
@@ -216,7 +216,7 @@ build_kernel() {
 	    	if [ $BUILD_DTBO = 1 ]
 			then
 				msg "|| Building DTBO ||"
-				python2 "/home/mani/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
+				python2 "/home3/mani/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
