@@ -18,14 +18,14 @@
 #include <trace/events/power.h>
 #include <linux/sched/sysctl.h>
 
-static unsigned int default_efficient_freq_lp[] = {0};
-static u64 default_up_delay_lp[] = {0};
+static unsigned int default_efficient_freq_lp[] = {1516800};
+static u64 default_up_delay_lp[] = {500};
 
-static unsigned int default_efficient_freq_hp[] = {0};
-static u64 default_up_delay_hp[] = {0};
+static unsigned int default_efficient_freq_hp[] = {1728000};
+static u64 default_up_delay_hp[] = {1000};
 
-static unsigned int default_efficient_freq_pr[] = {0};
-static u64 default_up_delay_pr[] = {0};
+static unsigned int default_efficient_freq_pr[] = {2304000};
+static u64 default_up_delay_pr[] = {2000};
 
 #define DEFAULT_RTG_BOOST_FREQ_LP 1000000
 #define DEFAULT_RTG_BOOST_FREQ_HP 0
