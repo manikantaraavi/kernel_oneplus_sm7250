@@ -17,6 +17,7 @@
 #include <linux/sched/cpufreq.h>
 #include <trace/events/power.h>
 #include <linux/sched/sysctl.h>
+#include <linux/kprofiles.h>
 
 static unsigned int default_efficient_freq_lp[] = {1516800};
 static u64 default_up_delay_lp[] = {500};
@@ -191,6 +192,10 @@ static int match_nearest_efficient_step(int freq,int maxstep,int *freq_table)
 
 static void do_freq_limit(struct sugov_policy *sg_policy, unsigned int *freq, u64 time)
 {
+	if (!(active_mode() == 1))
+		return;
+	
+
     if (*freq > sg_policy->tunables->efficient_freq[sg_policy->tunables->current_step] && !sg_policy->first_hp_request_time) {
 	    /* First request */
 	    *freq = sg_policy->tunables->efficient_freq[sg_policy->tunables->current_step];
