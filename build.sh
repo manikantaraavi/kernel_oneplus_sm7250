@@ -140,11 +140,8 @@ exports() {
 
 	if [ $COMPILER = "clang" ]
 	then
-		CLGV="$("$TC_DIR"/bin/clang --version | head -n 1)"
-	  	BINV="$("$TC_DIR"/bin/ld --version | head -n 1)"
-	    	LLDV="$("$TC_DIR"/bin/ld.lld --version | head -n 1)"
-    		export KBUILD_COMPILER_STRING="$CLGV - $BINV - $LLDV"
-		PATH=$TC_DIR/bin:$GC_DIR/bin:$GC2_DIR/bin:$PATH
+		KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+		PATH=$TC_DIR/bin:$PATH
 	elif [ $COMPILER = "gcc" ]
 	then
 		KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)
@@ -180,9 +177,9 @@ build_kernel() {
 	if [ $COMPILER = "clang" ]
 	then
 		MAKE+=(
-                        CLANG_TRIPLE=aarch64-linux-gnu- \
-                        CROSS_COMPILE=aarch64-linux-android- \
-                        CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+                        CROSS_COMPILE=aarch64-linux-gnu- \
+			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+			AR=llvm-ar \
 			CC=clang \
 			OBJDUMP=llvm-objdump \
 			STRIP=llvm-strip \
