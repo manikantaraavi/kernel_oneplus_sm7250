@@ -107,14 +107,14 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang /home/manikantaraavi/clang-llvm
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home/manikantaraavi/gcc
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home/manikantaraavi/gcc32
+	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang /home2/manikantaraavi/clang-llvm
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home2/manikantaraavi/gcc
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home2/manikantaraavi/gcc32
 
 		# Toolchain Directory defaults to clang-llvm
-		TC_DIR=/home/manikantaraavi/clang-llvm
-		GC_DIR=/home/manikantaraavi/gcc
-		GC2_DIR=/home/manikantaraavi/gcc32
+		TC_DIR=/home2/manikantaraavi/clang-llvm
+		GC_DIR=/home2/manikantaraavi/gcc
+		GC2_DIR=/home2/manikantaraavi/gcc32
 	elif [ $COMPILER = "gcc" ]
 	then
 		msg "|| Cloning GCC 9.3.0 baremetal ||"
@@ -125,7 +125,7 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	fi
 
 	msg "|| Cloning libufdt ||"
-	git clone https://android.googlesource.com/platform/system/libufdt /home/manikantaraavi/script/ufdt/libufdt
+	git clone https://android.googlesource.com/platform/system/libufdt /home2/manikantaraavi/script/ufdt/libufdt
 }
 
 
@@ -213,7 +213,7 @@ build_kernel() {
 	    	if [ $BUILD_DTBO = 1 ]
 			then
 				msg "|| Building DTBO ||"
-				python "/home/manikantaraavi/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
+				python "/home2/manikantaraavi/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
@@ -227,8 +227,8 @@ build_kernel() {
 gen_zip() {
 	msg "|| Zipping into a flashable zip ||"
 	cd AnyKernel3
-	mv "$KERNEL_DIR"/out/arch/arm64/boot/$FILES ~/avicii/AnyKernel3/$FILES 
-        mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img ~/avicii/AnyKernel3
+	mv "$KERNEL_DIR"/out/arch/arm64/boot/$FILES "$KERNEL_DIR"/AnyKernel3/$FILES 
+        mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img "$KERNEL_DIR"/AnyKernel3
 	zip -r9 $ZIPNAME-$DEVICE-$DATE.zip * -x .git README.md
 
 ##-----------------Uploading-------------------------------##
