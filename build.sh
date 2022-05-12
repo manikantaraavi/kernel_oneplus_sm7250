@@ -60,7 +60,7 @@ CHANNEL_ID=-1001612164828
 KERNEL_DIR=$PWD
 
 # Kernel Version
-VERSION="4"
+VERSION="5"
 
 # The name of the device for which the kernel is built
 #MODEL="OnePlus Nord"
@@ -243,7 +243,7 @@ msg "|| Uploading ||"
 	BUILD_END=$(date +"%s")
 	DIFF=$(($BUILD_END - $BUILD_START))
 	CHANNEL_ID=-1001612164828
-	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "Damn Bootlooppp"
+	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "$DATE -V $VERSION"
 	sendInfo "<b>BUILD took $((DIFF / 60))m:$((DIFF % 60))s </b>" \
 	         "=================================" \
 			 "<b>Linux Version :</b> <code>$(cat < out/.config | grep Linux/arm64 | cut -d " " -f3)</code>" \

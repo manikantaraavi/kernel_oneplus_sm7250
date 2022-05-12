@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=JustAnotherKernel by Prashant & Manikantaraavi
+kernel.string=JustAnotherKernelV5 by Prashant & Manikantaraavi
 do.devicecheck=1
 do.modules=0
 do.systemless=0
@@ -66,6 +66,8 @@ if mountpoint -q /data; then
     done
   done
 fi
+
+ui_print "  • Kernel has been installed. Enjoy"
 
 #patch fstab for mounting data partition
 patch_fstab /vendor/etc/fstab.qcom /data f2fs options "fsync_mode=nobarrier" "fsync_mode=posix,atgc,background_gc=sync"
