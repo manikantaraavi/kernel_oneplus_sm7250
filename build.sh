@@ -164,11 +164,11 @@ build_kernel() {
 		rm -rf out && rm -rf AnyKernel3/Image && rm -rf AnyKernel3/*.zip
 	fi
 
-	sendInfo        "<b>===============================</b>" \
+	sendInfo        "<b>============================</b>" \
                 "<b>Start Building :</b> <code>JustAnotherKernel</code>" \
                 "<b>Source Branch :</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>" \
                 "<b>Toolchain :</b> <code>$KBUILD_COMPILER_STRING</code>" \
-                "<b>===============================</b>"
+                "<b>============================</b>"
 
 	make O=out $DEFCONFIG
 
@@ -243,13 +243,14 @@ msg "|| Uploading ||"
 	BUILD_END=$(date +"%s")
 	DIFF=$(($BUILD_END - $BUILD_START))
 	CHANNEL_ID=-1001612164828
-	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "$DATE -V $VERSION"
+	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "$DATE -V$VERSION"
 	sendInfo "<b>BUILD took $((DIFF / 60))m:$((DIFF % 60))s </b>" \
-	         "=================================" \
+	         "==============================" \
 			 "<b>Linux Version :</b> <code>$(cat < out/.config | grep Linux/arm64 | cut -d " " -f3)</code>" \
              "<b>Build Date :</b> <code>$(date +"%A, %d %b %Y, %H:%M:%S")</code>" \
-	         " <b>Most recent changes are:</b> $(git log --pretty=format:'%h : %s' -15 --abbrev=7 --first-parent)"
-	sendInfo "================================="		 
+	         " <b>Most recent changes are:</b> " \
+		"  $(git log --pretty=format:'%h : %s' -15 --abbrev=7 --first-parent)"
+	sendInfo "=============================="		 
 	print "$blue BUILD took $((DIFF / 60))m:$((DIFF % 60))s | Most recent changes are : \n $(git log --pretty=format:'%h : %s' -15 --abbrev=7 --first-parent)"
 }
 
