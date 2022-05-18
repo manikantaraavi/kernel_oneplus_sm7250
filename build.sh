@@ -83,7 +83,7 @@ INCREMENTAL=0
 DEF_REG=0
 
 # Files/artifacts
-FILES=Image
+FILES=Image.gz
 
 # Build dtbo.img (select this only if your source has support to building dtbo.img)
 # 1 is YES | 0 is NO(default)
@@ -227,11 +227,11 @@ build_kernel() {
 gen_zip() {
 	msg "|| Zipping into a flashable zip ||"
 	dts_source=arch/arm64/boot/dts/vendor/qcom
-        find out/$dts_source -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb
+        find out/$dts_source -name '*.dtb' -exec cat {} + >out/arch/arm64/boot/dtb.img
 	cd AnyKernel3
 	mv "$KERNEL_DIR"/out/arch/arm64/boot/$FILES "$KERNEL_DIR"/AnyKernel3/$FILES 
         mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img "$KERNEL_DIR"/AnyKernel3
-	mv "$KERNEL_DIR"/out/arch/arm64/boot/dtb "$KERNEL_DIR"/AnyKernel3
+	mv "$KERNEL_DIR"/out/arch/arm64/boot/dtb.img "$KERNEL_DIR"/AnyKernel3
 	zip -r9 $ZIPNAME-$DEVICE-$DATE.zip * -x .git README.md
 
 ##-----------------Uploading-------------------------------##
