@@ -521,6 +521,7 @@ CLANG_FLAGS	+= -fno-builtin-stpcpy
 CLANG_FLAGS	+= -Werror=unknown-warning-option
 CLANG_FLAGS	+= $(call cc-option, -Wno-unsequenced)
 CLANG_FLAGS	+= $(call cc-option, -Wno-unused-but-set-variable)
+CLANG_FLAGS	+= $(call cc-option, -opaque-pointers)
 ifeq ($(ld-name),lld)
 CLANG_FLAGS	+= -fuse-ld=$(shell which $(LD))
 endif
