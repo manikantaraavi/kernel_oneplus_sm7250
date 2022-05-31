@@ -710,6 +710,7 @@ KBUILD_CFLAGS   += -O3 $(call cc-disable-warning,maybe-uninitialized,)
 endif
 
 # Enable Clang Polly optimizations
+ifeq ($(cc-name),clang)
 KBUILD_CFLAGS	+= -mllvm -polly \
 		   -mllvm -polly-run-dce \
 		   -mllvm -polly-run-inliner \
@@ -717,6 +718,7 @@ KBUILD_CFLAGS	+= -mllvm -polly \
 		   -mllvm -polly-detect-keep-going \
 		   -mllvm -polly-vectorizer=stripmine \
 		   -mllvm -polly-invariant-load-hoisting
+endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)
