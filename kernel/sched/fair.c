@@ -4163,11 +4163,13 @@ bias_to_this_cpu(struct task_struct *p, int cpu, int start_cpu)
 	cpumask_t mask = CPU_MASK_ALL;
 #endif
 
+#ifdef CONFIG_RATP
 	if (is_ratp_enable() &&
 			(!(im_rendering(p) && prefer_sched_group(p)) ||
 			(!(is_gmod_enable() && prefer_top(p)))))
 		base_test = cpumask_test_cpu(cpu, &p->cpus_suggested) &&
 				cpu_active(cpu);
+#endif
 
 #ifdef CONFIG_TPD
 	if (is_tpd_enable() && is_tpd_task(p)) {
@@ -4402,11 +4404,13 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 			}
 		}
 #endif
+#ifdef CONFIG_RATP
 		if (is_ratp_enable() &&
 				entity_is_task(se) &&
 				((im_rendering(task_of(se)) && prefer_sched_group(task_of(se))) ||
 				(is_gmod_enable() && prefer_top(task_of(se)))))
 			vruntime -= sysctl_sched_latency;
+#endif
 	}
 
 	/* ensure we never gain time by being placed backwards. */
@@ -7330,17 +7334,8 @@ static int get_start_cpu(struct task_struct *p, bool sync_boost)
 	 */
 
 	if (task_skip_min || boosted) {
-		/*limit the passerby to the gold/gold+ cores*/
-		if (is_ratp_enable()) {
-			if ((im_rendering(p) && prefer_sched_group(p)) ||
-					(is_gmod_enable() && prefer_top(p))) {
-				start_cpu = rd->mid_cap_orig_cpu == -1 ?
-					rd->max_cap_orig_cpu : rd->mid_cap_orig_cpu;
-			}
-		} else {
 			start_cpu = rd->mid_cap_orig_cpu == -1 ?
 				rd->max_cap_orig_cpu : rd->mid_cap_orig_cpu;
-		}
 	}
 
 	if (task_boost > TASK_BOOST_ON_MID) {
@@ -8396,7 +8391,6 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu,
 			cpumask_test_cpu(prev_cpu, &p->cpus_allowed))
 		return prev_cpu;
 
-	start_cpu = get_start_cpu(p);
 #ifdef CONFIG_OPCHAIN
 	// curtis@ASTI, 2019/4/29, add for uxrealm CONFIG_OPCHAIN
 	is_uxtop = is_opc_task(p, UT_FORE);
@@ -12832,7 +12826,6 @@ static void rq_offline_fair(struct rq *rq)
 	unthrottle_offline_cfs_rqs(rq);
 }
 
-#endif /* CONFIG_SMP */
 
 /*
  * scheduler tick hitting a task of our scheduling class.
