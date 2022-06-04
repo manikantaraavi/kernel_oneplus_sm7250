@@ -18,7 +18,6 @@
 #include <linux/vmalloc.h>
 #include <linux/sched/types.h>
 #include <linux/sched.h>
-#include <linux/module.h>
 #include <soc/qcom/secure_buffer.h>
 #include "ion_system_heap.h"
 #include "ion.h"
@@ -441,23 +440,6 @@ err:
 	return ret;
 }
 
-/*
- * Moto huangzq2: limit the system ion cache size.
- * We often see lost ram is still very high even we close the camera app.
- * That's because camera's ion memory goes into ion cache after use, not
- * buddy system. And this cache was not counted in proc/meminfo/memAvailable,
- * so it can not reflect the true memAvailable in this state. It may affects
- * some components like camera or lmkd which need evaluate true memAvailable
- * in system. Take camera as example, while launching camera, camera app needs
- * calcuate the available memory then call framework api to kill processes,
- * without this patch, we will see overkill.
- *
- * This patch is only for 4.14 & 4.19, on kernel 5.4, ion cache will
- * be counted in memAvailable, so memAvailable is always trustable.
- */
-static int max_page_pool_size = 24300;
-module_param(max_page_pool_size, int, 0600);
-
 void ion_system_heap_free(struct ion_buffer *buffer)
 {
 	struct ion_heap *heap = buffer->heap;
@@ -468,16 +450,6 @@ void ion_system_heap_free(struct ion_buffer *buffer)
 	struct scatterlist *sg;
 	int i;
 	int vmid = get_secure_vmid(buffer->flags);
-	unsigned int count = 0;
-
-	for (i = 0; i < NUM_ORDERS; i++) {
-		count += ion_page_pool_total(sys_heap->cached_pools[i], true);
-		count += ion_page_pool_total(sys_heap->uncached_pools[i], true);
-	}
-
-	if (count > max_page_pool_size)
-		buffer->private_flags |= ION_PRIV_FLAG_SHRINKER_FREE;
-
 
 	if (!(buffer->private_flags & ION_PRIV_FLAG_SHRINKER_FREE) &&
 	    !(buffer->flags & ION_FLAG_POOL_FORCE_ALLOC)) {
@@ -547,105 +519,6 @@ static struct ion_heap_ops system_heap_ops = {
 	.map_user = ion_heap_map_user,
 	.shrink = ion_system_heap_shrink,
 };
-
-static int ion_system_heap_debug_show(struct ion_heap *heap, struct seq_file *s,
-				      void *unused)
-{
-	struct ion_system_heap *sys_heap;
-	bool use_seq = s;
-	unsigned long uncached_total = 0;
-	unsigned long cached_total = 0;
-	unsigned long secure_total = 0;
-	struct ion_page_pool *pool;
-	int i, j;
-
-	sys_heap = container_of(heap, struct ion_system_heap, heap);
-	for (i = 0; i < NUM_ORDERS; i++) {
-		pool = sys_heap->uncached_pools[i];
-		if (use_seq) {
-			seq_printf(s,
-				   "%d order %u highmem pages in uncached pool = %lu total\n",
-				   pool->high_count, pool->order,
-				   (1 << pool->order) * PAGE_SIZE *
-					pool->high_count);
-			seq_printf(s,
-				   "%d order %u lowmem pages in uncached pool = %lu total\n",
-				   pool->low_count, pool->order,
-				   (1 << pool->order) * PAGE_SIZE *
-					pool->low_count);
-		}
-
-		uncached_total += (1 << pool->order) * PAGE_SIZE *
-			pool->high_count;
-		uncached_total += (1 << pool->order) * PAGE_SIZE *
-			pool->low_count;
-	}
-
-	for (i = 0; i < NUM_ORDERS; i++) {
-		pool = sys_heap->cached_pools[i];
-		if (use_seq) {
-			seq_printf(s,
-				   "%d order %u highmem pages in cached pool = %lu total\n",
-				   pool->high_count, pool->order,
-				   (1 << pool->order) * PAGE_SIZE *
-					pool->high_count);
-			seq_printf(s,
-				   "%d order %u lowmem pages in cached pool = %lu total\n",
-				   pool->low_count, pool->order,
-				   (1 << pool->order) * PAGE_SIZE *
-					pool->low_count);
-		}
-
-		cached_total += (1 << pool->order) * PAGE_SIZE *
-			pool->high_count;
-		cached_total += (1 << pool->order) * PAGE_SIZE *
-			pool->low_count;
-	}
-
-	for (i = 0; i < NUM_ORDERS; i++) {
-		for (j = 0; j < VMID_LAST; j++) {
-			if (!is_secure_vmid_valid(j))
-				continue;
-			pool = sys_heap->secure_pools[j][i];
-
-			if (use_seq) {
-				seq_printf(s,
-					   "VMID %d: %d order %u highmem pages in secure pool = %lu total\n",
-					   j, pool->high_count, pool->order,
-					   (1 << pool->order) * PAGE_SIZE *
-						pool->high_count);
-				seq_printf(s,
-					   "VMID  %d: %d order %u lowmem pages in secure pool = %lu total\n",
-					   j, pool->low_count, pool->order,
-					   (1 << pool->order) * PAGE_SIZE *
-						pool->low_count);
-			}
-
-			secure_total += (1 << pool->order) * PAGE_SIZE *
-					 pool->high_count;
-			secure_total += (1 << pool->order) * PAGE_SIZE *
-					 pool->low_count;
-		}
-	}
-
-	if (use_seq) {
-		seq_puts(s, "--------------------------------------------\n");
-		seq_printf(s, "uncached pool = %lu cached pool = %lu secure pool = %lu\n",
-			   uncached_total, cached_total, secure_total);
-		seq_printf(s, "pool total (uncached + cached + secure) = %lu\n",
-			   uncached_total + cached_total + secure_total);
-		seq_puts(s, "--------------------------------------------\n");
-	} else {
-		pr_info("-------------------------------------------------\n");
-		pr_info("uncached pool = %lu cached pool = %lu secure pool = %lu\n",
-			uncached_total, cached_total, secure_total);
-		pr_info("pool total (uncached + cached + secure) = %lu\n",
-			uncached_total + cached_total + secure_total);
-		pr_info("-------------------------------------------------\n");
-	}
-
-	return 0;
-}
 
 static void ion_system_heap_destroy_pools(struct ion_page_pool **pools)
 {
@@ -786,7 +659,6 @@ struct ion_heap *ion_system_heap_create(struct ion_platform_heap *data)
 
 	mutex_init(&heap->split_page_mutex);
 
-	heap->heap.debug_show = ion_system_heap_debug_show;
 	return &heap->heap;
 destroy_pools:
 	ion_system_heap_destroy_pools(heap->cached_pools);
