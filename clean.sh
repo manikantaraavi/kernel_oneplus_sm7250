@@ -3,4 +3,4 @@ rm -rf AnyKernel3/Image
 rm -rf AnyKernel3/Image-dtb
 rm -rf AnyKernel3/dtbo.img
 rm -rf out/
-rm -rf AnyKernel3/dtb
+rm -rf AnyKernel3/dtb.img
