@@ -60,7 +60,7 @@ CHANNEL_ID=-1001612164828
 KERNEL_DIR=$PWD
 
 # Kernel Version
-VERSION="7"
+VERSION="8"
 
 # The name of the device for which the kernel is built
 #MODEL="OnePlus Nord"

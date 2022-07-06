@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=JustAnotherKernelV7 by Prashant & Manikantaraavi
+kernel.string=JustAnotherKernelV8 by Prashant & Manikantaraavi
 do.devicecheck=1
 do.modules=0
 do.systemless=0
