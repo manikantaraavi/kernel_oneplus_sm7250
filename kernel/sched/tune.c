@@ -640,7 +640,7 @@ int schedtune_prefer_idle(struct task_struct *p)
 	struct schedtune *st;
 	int prefer_idle;
 
-	if (unlikely(!schedtune_initialized))
+	if (unlikely(!schedtune_initialized) || unlikely(active_mode() == 1))
 		return 0;
 
 	/* Get prefer_idle value */
@@ -691,6 +691,8 @@ prefer_idle_read(struct cgroup_subsys_state *css, struct cftype *cft)
 {
 	struct schedtune *st = css_st(css);
 	
+	if (unlikely(active_mode() == 1))
+		return 0;
 
 	return st->prefer_idle;
 }
