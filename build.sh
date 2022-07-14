@@ -99,6 +99,8 @@ ZIPNAME="JustAnotherKernel-$VERSION"
 # Set Date and Time Zone
 DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 
+DISTRO=$(source /etc/os-release && echo ${NAME})
+
 ##----------------------------------------------------------------------------------##
 ##----------Now Its time for other stuffs lie cloning, exporting, etc--------------##
 
@@ -164,11 +166,12 @@ build_kernel() {
 		rm -rf out && rm -rf AnyKernel3/Image && rm -rf AnyKernel3/*.zip
 	fi
 
-	sendInfo        "<b>============================</b>" \
+	sendInfo        "<b>==================</b>" \
                 "<b>Start Building :</b> <code>JustAnotherKernel</code>" \
                 "<b>Source Branch :</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>" \
                 "<b>Toolchain :</b> <code>$KBUILD_COMPILER_STRING</code>" \
-                "<b>============================</b>"
+				"<b>Distro: $DISTRO" \
+                "<b>===============</b>"
 
 	make O=out $DEFCONFIG
 
@@ -177,14 +180,17 @@ build_kernel() {
 	if [ $COMPILER = "clang" ]
 	then
 		MAKE+=(
-                        CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
 			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-			AR=llvm-ar \
 			CC=clang \
+			AR=llvm-ar \
 			OBJDUMP=llvm-objdump \
 			STRIP=llvm-strip \
+			NM=llvm-nm \
+			OBJCOPY=llvm-objcopy \
+			LD=ld.lld
 			DTC_EXT=$KERNEL_DIR/dtc
-                        )
+            )
 	elif [ $COMPILER = "gcc" ]
 	then
 		MAKE+=(
@@ -203,9 +209,7 @@ build_kernel() {
 
 	msg "|| Started Compilation ||"
 	make -j"$PROCS" O=out \
-		NM=llvm-nm \
-		OBJCOPY=llvm-objcopy \
-		LD=ld.lld "${MAKE[@]}" 2>&1
+	    "${MAKE[@]}" 2>&1 | tee error.log
 
 		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/$FILES ]
 	    then
