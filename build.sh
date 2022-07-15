@@ -188,7 +188,7 @@ build_kernel() {
 			STRIP=llvm-strip \
 			NM=llvm-nm \
 			OBJCOPY=llvm-objcopy \
-			LD=ld.lld
+			LD=ld.lld \
 			DTC_EXT=$KERNEL_DIR/dtc
             )
 	elif [ $COMPILER = "gcc" ]

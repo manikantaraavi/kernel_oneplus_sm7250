@@ -78,4 +78,4 @@ obj-$(CONFIG_QTI_XR_SMRTVWR_MISC) += qxr-stdalonevwr.o
 obj-$(CONFIG_FPR_FPC)		+= fpr_FingerprintCard/
 obj-y                           += qrc/
 
-obj-$(CONFIG_MACH_ONEPLUS_SM8250) += oneplus/
+obj-y += oneplus/
