@@ -1528,7 +1528,7 @@ static int smb5_usb_get_prop(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_MAX:
              if (chg->dash_on)
-			val->intval = 6000000;
+			val->intval = 5400000;
 		else
 			rc = smblib_get_prop_input_current_max(chg, val);
          	break;
