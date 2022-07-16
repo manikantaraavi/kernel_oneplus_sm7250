@@ -32,11 +32,11 @@
 #include <linux/usb/usbpd.h>
 
 //#include "oplus_battery_msm7250.h"
-#include "../../../../kernel/msm-4.19/drivers/power/supply/qcom/smb5-reg.h"
-#include "../../../../kernel/msm-4.19/drivers/power/supply/qcom/battery.h"
+#include "../../../../drivers/power/supply/qcom/smb5-reg.h"
+#include "../../../../drivers/power/supply/qcom/battery.h"
 //#include "../../../../kernel/msm-4.19/drivers/power/supply/qcom/schgm-flash.h"
-#include "../../../../kernel/msm-4.19/drivers/power/supply/qcom/step-chg-jeita.h"
-#include "../../../../kernel/msm-4.19/drivers/power/supply/qcom/storm-watch.h"
+#include "../../../../drivers/power/supply/qcom/step-chg-jeita.h"
+#include "../../../../drivers/power/supply/qcom/storm-watch.h"
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
 #include "../oplus_charger.h"
@@ -9155,7 +9155,7 @@ bool oplus_chg_check_qchv_condition(void)
 	return false;
 }
 
-int oplus_chg_set_qc_config()
+int oplus_chg_set_qc_config(void)
 {
 	int ret = -1;
 	struct smb_charger *chg = NULL;
@@ -10460,7 +10460,7 @@ void oplus_get_usbtemp_volt(struct oplus_chg_chip *chip)
 	return ;
 }
 
-void oplus_set_typec_sinkonly()
+void oplus_set_typec_sinkonly(void)
 {
 	int rc;
 	struct smb_charger *chg = NULL;

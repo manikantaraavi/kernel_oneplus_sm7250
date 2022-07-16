@@ -14,36 +14,26 @@ ifeq ($(KERNEL_BUILD), 1)
 endif
 
 ifeq ($(KERNEL_BUILD), 0)
-	ifeq ($(CONFIG_ARCH_SDM845), y)
-		include $(AUDIO_ROOT)/config/sdm845auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm845autoconf.h
-	endif
-	ifeq ($(CONFIG_ARCH_SDM670), y)
-		include $(AUDIO_ROOT)/config/sdm710auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm710autoconf.h
-	endif
-	ifeq ($(CONFIG_ARCH_SDM450), y)
-		include $(AUDIO_ROOT)/config/sdm710auto.conf
-		export
-		INCS    +=  -include $(AUDIO_ROOT)/config/sdm710autoconf.h
-	endif
 	ifeq ($(CONFIG_ARCH_SM6150), y)
 		include $(AUDIO_ROOT)/config/sm6150auto.conf
 		export
 		INCS    +=  -include $(AUDIO_ROOT)/config/sm6150autoconf.h
 	endif
-	ifeq ($(CONFIG_ARCH_KONA), y)
-		include $(AUDIO_ROOT)/config/konaauto.conf
-		INCS    +=  -include $(AUDIO_ROOT)/config/konaautoconf.h
+	ifeq ($(CONFIG_ARCH_TRINKET), y)
+		include $(AUDIO_ROOT)/config/sm6150auto.conf
+		export
+		INCS    +=  -include $(AUDIO_ROOT)/config/sm6150autoconf.h
+	endif
+	ifeq ($(CONFIG_ARCH_BENGAL), y)
+		include $(AUDIO_ROOT)/config/bengalauto.conf
+		export
+		INCS    +=  -include $(AUDIO_ROOT)/config/bengalautoconf.h
 	endif
 	ifeq ($(CONFIG_ARCH_LITO), y)
 		include $(AUDIO_ROOT)/config/litoauto.conf
 		export
 		INCS    +=  -include $(AUDIO_ROOT)/config/litoautoconf.h
 	endif
-
 endif
 
 # As per target team, build is done as follows:
@@ -70,17 +60,20 @@ UAPI_INC :=	-I$(AUDIO_ROOT)/include/$(UAPI_DIR)
 COMMON_DIR :=	include
 COMMON_INC :=	-I$(AUDIO_ROOT)/$(COMMON_DIR)
 
-############ tfa98xx ############
+############ SIA81XX ############
 
-# for nxp tfa98xx Codec
-ifdef CONFIG_SND_SOC_TFA98XX
-	TFA98XX_OBJS += tfa_container_v6.o
-	TFA98XX_OBJS += tfa98xx_v6.o
-	TFA98XX_OBJS += tfa_dsp_v6.o
-	TFA98XX_OBJS += tfa_init_v6.o
-ifdef OPLUS_FEATURE_SMARTPA_PM
-	TFA98XX_OBJS += ../smartpa_pm/smartpa_pm.o
-endif
+# for SIA81XX Codec
+ifdef CONFIG_SND_SOC_SIA81XX
+	SIA81XX_OBJS += sia81xx.o
+	SIA81XX_OBJS += sia81xx_regmap.o
+	SIA81XX_OBJS += sia81xx_aux_dev_if.o
+	SIA81XX_OBJS += sia81xx_set_vdd.o
+	SIA81XX_OBJS += sia8101_regs.o
+	SIA81XX_OBJS += sia8108_regs.o
+	SIA81XX_OBJS += sia8109_regs.o
+	SIA81XX_OBJS += sia81xx_timer_task.o
+	SIA81XX_OBJS += sia81xx_socket.o
+	SIA81XX_OBJS += sia81xx_afe.o
 endif
 
 LINUX_INC +=	-Iinclude/linux
@@ -97,7 +90,9 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-DANI_COMPILER_TYPE_GCC \
 		-DANI_OS_TYPE_ANDROID=6 \
 		-DPTT_SOCK_SVC_ENABLE \
+		-DSIA81XX_TUNING \
 		-Wall\
+		-Werror\
 		-D__linux__
 
 KBUILD_CPPFLAGS += $(CDEFINES)
@@ -124,8 +119,8 @@ KBUILD_EXTRA_SYMBOLS +=$(OUT)/obj/vendor/qcom/opensource/audio-kernel/soc/Module
 endif
 
 # Module information used by KBuild framework
-obj-$(CONFIG_SND_SOC_TFA98XX) += tfa98xx-v6_dlkm.o
-tfa98xx-v6_dlkm-y := $(TFA98XX_OBJS)
+obj-$(CONFIG_SND_SOC_SIA81XX) += sia81xx_dlkm.o
+sia81xx_dlkm-y := $(SIA81XX_OBJS)
 
 # inject some build related information
 DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"

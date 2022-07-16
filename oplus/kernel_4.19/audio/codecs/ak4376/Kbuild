@@ -70,17 +70,11 @@ UAPI_INC :=	-I$(AUDIO_ROOT)/include/$(UAPI_DIR)
 COMMON_DIR :=	include
 COMMON_INC :=	-I$(AUDIO_ROOT)/$(COMMON_DIR)
 
-############ tfa98xx ############
+############ ak4376 codec ############
 
-# for nxp tfa98xx Codec
-ifdef CONFIG_SND_SOC_TFA98XX
-	TFA98XX_OBJS += tfa_container_v6.o
-	TFA98XX_OBJS += tfa98xx_v6.o
-	TFA98XX_OBJS += tfa_dsp_v6.o
-	TFA98XX_OBJS += tfa_init_v6.o
-ifdef OPLUS_FEATURE_SMARTPA_PM
-	TFA98XX_OBJS += ../smartpa_pm/smartpa_pm.o
-endif
+# for ak4376 codec
+ifdef CONFIG_SND_SOC_AK4376
+	AK4376_OBJS += ak4376.o
 endif
 
 LINUX_INC +=	-Iinclude/linux
@@ -98,6 +92,7 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-DANI_OS_TYPE_ANDROID=6 \
 		-DPTT_SOCK_SVC_ENABLE \
 		-Wall\
+		-Werror\
 		-D__linux__
 
 KBUILD_CPPFLAGS += $(CDEFINES)
@@ -124,8 +119,8 @@ KBUILD_EXTRA_SYMBOLS +=$(OUT)/obj/vendor/qcom/opensource/audio-kernel/soc/Module
 endif
 
 # Module information used by KBuild framework
-obj-$(CONFIG_SND_SOC_TFA98XX) += tfa98xx-v6_dlkm.o
-tfa98xx-v6_dlkm-y := $(TFA98XX_OBJS)
+obj-$(CONFIG_SND_SOC_AK4376) += ak4376_dlkm.o
+ak4376_dlkm-y := $(AK4376_OBJS)
 
 # inject some build related information
 DEFINES += -DBUILD_TIMESTAMP=\"$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')\"
