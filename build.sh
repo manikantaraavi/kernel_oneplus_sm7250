@@ -60,7 +60,7 @@ CHANNEL_ID=-1001612164828
 KERNEL_DIR=$PWD
 
 # Kernel Version
-VERSION="7"
+VERSION="8"
 
 # The name of the device for which the kernel is built
 #MODEL="OnePlus Nord"
@@ -99,6 +99,8 @@ ZIPNAME="JustAnotherKernel-$VERSION"
 # Set Date and Time Zone
 DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 
+DISTRO=$(source /etc/os-release && echo ${NAME})
+
 ##----------------------------------------------------------------------------------##
 ##----------Now Its time for other stuffs lie cloning, exporting, etc--------------##
 
@@ -107,14 +109,14 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang /home/manikantaraavi/clang-llvm
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 /home/manikantaraavi/gcc
-        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 /home/manikantaraavi/gcc32
+	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang $KERNEL_DIR/clang-llvm
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 $KERNEL_DIR/gcc
+        git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 $KERNEL_DIR/gcc32
 
 		# Toolchain Directory defaults to clang-llvm
-		TC_DIR=/home/manikantaraavi/clang-llvm
-		GC_DIR=/home/manikantaraavi/gcc
-		GC2_DIR=/home/manikantaraavi/gcc32
+		TC_DIR=$KERNEL_DIR/clang-llvm
+		GC_DIR=$KERNEL_DIR/gcc
+		GC2_DIR=$KERNEL_DIR/gcc32
 	elif [ $COMPILER = "gcc" ]
 	then
 		msg "|| Cloning GCC 9.3.0 baremetal ||"
@@ -125,7 +127,7 @@ DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
 	fi
 
 	msg "|| Cloning libufdt ||"
-	git clone https://android.googlesource.com/platform/system/libufdt /home/manikantaraavi/script/ufdt/libufdt
+	git clone https://android.googlesource.com/platform/system/libufdt $KERNEL_DIR/script/ufdt/libufdt
 }
 
 
@@ -164,11 +166,12 @@ build_kernel() {
 		rm -rf out && rm -rf AnyKernel3/Image && rm -rf AnyKernel3/*.zip
 	fi
 
-	sendInfo        "<b>============================</b>" \
+	sendInfo        "<b>==================</b>" \
                 "<b>Start Building :</b> <code>JustAnotherKernel</code>" \
                 "<b>Source Branch :</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>" \
                 "<b>Toolchain :</b> <code>$KBUILD_COMPILER_STRING</code>" \
-                "<b>============================</b>"
+				"<b>Distro: $DISTRO" \
+                "<b>===============</b>"
 
 	make O=out $DEFCONFIG
 
@@ -177,14 +180,17 @@ build_kernel() {
 	if [ $COMPILER = "clang" ]
 	then
 		MAKE+=(
-                        CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
 			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-			AR=llvm-ar \
 			CC=clang \
+			AR=llvm-ar \
 			OBJDUMP=llvm-objdump \
 			STRIP=llvm-strip \
+			NM=llvm-nm \
+			OBJCOPY=llvm-objcopy \
+			LD=ld.lld
 			DTC_EXT=$KERNEL_DIR/dtc
-                        )
+            )
 	elif [ $COMPILER = "gcc" ]
 	then
 		MAKE+=(
@@ -203,9 +209,7 @@ build_kernel() {
 
 	msg "|| Started Compilation ||"
 	make -j"$PROCS" O=out \
-		NM=llvm-nm \
-		OBJCOPY=llvm-objcopy \
-		LD=ld.lld "${MAKE[@]}" 2>&1
+	    "${MAKE[@]}" 2>&1 | tee error.log
 
 		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/$FILES ]
 	    then
@@ -213,7 +217,7 @@ build_kernel() {
 	    	if [ $BUILD_DTBO = 1 ]
 			then
 				msg "|| Building DTBO ||"
-				python "/home/manikantaraavi/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
+				python "$KERNEL_DIR/script/ufdt/libufdt/utils/src/mkdtboimg.py" \
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
