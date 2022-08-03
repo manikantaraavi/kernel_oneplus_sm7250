@@ -20,13 +20,13 @@
 #include <linux/kprofiles.h>
 
 static unsigned int default_efficient_freq_lp[] = {1516800};
-static u64 default_up_delay_lp[] = {1000 * NSEC_PER_MSEC};
+static u64 default_up_delay_lp[] = {3000 * NSEC_PER_MSEC};
 
 static unsigned int default_efficient_freq_hp[] = {1728000};
-static u64 default_up_delay_hp[] = {1000 * NSEC_PER_MSEC};
+static u64 default_up_delay_hp[] = {3000 * NSEC_PER_MSEC};
 
 static unsigned int default_efficient_freq_pr[] = {1766400};
-static u64 default_up_delay_pr[] = {2000 * NSEC_PER_MSEC};
+static u64 default_up_delay_pr[] = {3000 * NSEC_PER_MSEC};
 
 #define DEFAULT_RTG_BOOST_FREQ_LP 0
 #define DEFAULT_RTG_BOOST_FREQ_HP 0
