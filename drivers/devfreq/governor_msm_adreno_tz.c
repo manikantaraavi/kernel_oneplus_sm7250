@@ -463,7 +463,7 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
-		if (active_mode() == 1) {
+		if (active_mode() != 3) {
 			scm_data[2] = priv->bin.busy_time;
 		} else {
 			scm_data[2] = priv->bin.busy_time * 3 / 2;
