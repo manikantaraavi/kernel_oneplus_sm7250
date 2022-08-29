@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=JustAnotherKernelV8 by Prashant & Manikantaraavi
+kernel.string=JAKernel3003
 do.devicecheck=1
 do.modules=0
 do.systemless=0
@@ -15,7 +15,7 @@ device.name2=Nord
 device.name3=OnePlusNord
 device.name4=OnePlus Nord
 device.name5=
-supported.versions=11,12 
+supported.versions=11,12,13
 supported.patchlevels=
 '; } # end properties
 

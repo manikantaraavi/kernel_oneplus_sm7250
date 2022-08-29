@@ -22,6 +22,8 @@
 
 #Kernel building script
 
+bash clean.sh
+
 # Function to show an informational message
 msg() {
     echo -e "\e[1;32m$*\e[0m"
@@ -51,7 +53,7 @@ blue='\033[0;34m'
 default='\033[0m'
 DATE=$(date +"%Y%m%d-%H%M")
 TELEGRAM=Telegram/telegram
-CHANNEL_ID=-1001612164828
+CHANNEL_ID=-1001261511799
 
 ##--------------------------------------------------------##
 ##----------Basic Informations and Variables--------------##
@@ -60,7 +62,7 @@ CHANNEL_ID=-1001612164828
 KERNEL_DIR=$PWD
 
 # Kernel Version
-VERSION="9"
+VERSION="I"
 
 # The name of the device for which the kernel is built
 #MODEL="OnePlus Nord"
@@ -94,7 +96,7 @@ BUILD_DTBO=1
 SILENCE=0
 
 # The name of the Kernel, to name the ZIP
-ZIPNAME="JustAnotherKernel-$VERSION"
+ZIPNAME="Kernel3003-$VERSION"
 
 # Set Date and Time Zone
 DATE=$(TZ=Asia/Kolkata date +"%Y%m%d-%H%M")
@@ -109,7 +111,7 @@ DISTRO=$(source /etc/os-release && echo ${NAME})
 	if [ $COMPILER = "clang" ]
 	then
 		msg "|| Cloning Clang ||"
-	git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang $KERNEL_DIR/clang-llvm
+	    git clone --depth=1 https://gitlab.com/Panchajanya1999/azure-clang $KERNEL_DIR/clang-llvm
         git clone https://github.com/sohamxda7/llvm-stable -b gcc64 --depth=1 $KERNEL_DIR/gcc
         git clone https://github.com/sohamxda7/llvm-stable -b gcc32  --depth=1 $KERNEL_DIR/gcc32
 
@@ -170,7 +172,6 @@ build_kernel() {
                 "<b>Start Building :</b> <code>JustAnotherKernel</code>" \
                 "<b>Source Branch :</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>" \
                 "<b>Toolchain :</b> <code>$KBUILD_COMPILER_STRING</code>" \
-				"<b>Distro: $DISTRO" \
                 "<b>===============</b>"
 
 	make O=out $DEFCONFIG
@@ -201,7 +202,7 @@ build_kernel() {
 			STRIP=aarch64-elf-strip
 		)
 	fi
-
+	
 	if [ $SILENCE = "1" ]
 	then
 		MAKE+=( -s )
@@ -221,8 +222,9 @@ build_kernel() {
 				create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/vendor/qcom/avicii-overlay.dtbo"
 			fi
 				gen_zip
-
 		fi
+    "${TELEGRAM}" -f "$(echo "$(pwd)"/error.log)" -c "${CHANNEL_ID}" -H "build logs"
+	rm -rf error.log 
 
 }
 ##-----------------------------------------------------------##
@@ -246,7 +248,7 @@ msg "|| Uploading ||"
 	TELEGRAM=Telegram/telegram
 	BUILD_END=$(date +"%s")
 	DIFF=$(($BUILD_END - $BUILD_START))
-	CHANNEL_ID=-1001612164828
+	CHANNEL_ID=-1001261511799
 	"${TELEGRAM}" -f "$(echo "$(pwd)"/AnyKernel3/*.zip)" -c "${CHANNEL_ID}" -H "$DATE -V$VERSION"
 	sendInfo "<b>BUILD took $((DIFF / 60))m:$((DIFF % 60))s </b>" \
 	         "==============================" \
