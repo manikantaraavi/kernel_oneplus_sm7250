@@ -14,10 +14,6 @@
 #include <linux/pagevec.h>
 #include <linux/swap.h>
 
-#if defined(CONFIG_UFSTW)
-#include <linux/ufstw.h>
-#endif
-
 #include "f2fs.h"
 #include "node.h"
 #include "segment.h"
@@ -349,16 +345,17 @@ static int f2fs_write_meta_pages(struct address_space *mapping,
 	if (wbc->sync_mode != WB_SYNC_ALL &&
 			get_pages(sbi, F2FS_DIRTY_META) <
 					nr_pages_to_skip(sbi, META))
+
 		goto skip_write;
 
 	/* if locked failed, cp will flush dirty pages instead */
-	if (!down_write_trylock(&sbi->cp_global_sem))
+	if (!mutex_trylock(&sbi->cp_mutex))
 		goto skip_write;
 
 	trace_f2fs_writepages(mapping->host, wbc, META);
 	diff = nr_pages_to_write(sbi, META, wbc);
 	written = f2fs_sync_meta_pages(sbi, META, wbc->nr_to_write, FS_META_IO);
-	up_write(&sbi->cp_global_sem);
+	mutex_unlock(&sbi->cp_mutex);
 	wbc->nr_to_write = max((long)0, wbc->nr_to_write - written - diff);
 	return 0;
 
@@ -1410,21 +1407,18 @@ static int do_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 	int err;
 #ifdef CONFIG_F2FS_BD_STAT
 	u64 cp_flush_meta_begin;
-#endif
-
-	/* Flush all the NAT/SIT pages */
-#ifdef CONFIG_F2FS_BD_STAT
 	cp_flush_meta_begin = local_clock();
 #endif
+	/* Flush all the NAT/SIT pages */
 	f2fs_sync_meta_pages(sbi, META, LONG_MAX, FS_CP_META_IO);
-#ifdef CONFIG_F2FS_BD_STAT
-	*cp_flush_meta_time += local_clock() - cp_flush_meta_begin;
-#endif
 	if (get_pages(sbi, F2FS_DIRTY_META) && !f2fs_cp_error(sbi)) {
 		WARN_ON(1);
 		set_sbi_flag(sbi, SBI_NEED_FSCK);
 	}
 
+#ifdef CONFIG_F2FS_BD_STAT
+	*cp_flush_meta_time += local_clock() - cp_flush_meta_begin;
+#endif
 	/* start to update checkpoint, cp ver is already updated previously */
 	ckpt->elapsed_time = cpu_to_le64(get_mtime(sbi, true));
 	ckpt->free_segment_count = cpu_to_le32(free_segments(sbi));
@@ -1591,7 +1585,6 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 	u64 cp_begin = 0, cp_end, cp_submit_end = 0, discard_begin, discard_end;
 	u64 cp_flush_meta_time, cp_flush_meta_begin;
 #endif
-
 	if (f2fs_readonly(sbi->sb) || f2fs_hw_is_readonly(sbi))
 		return -EROFS;
 
@@ -1601,10 +1594,7 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 		f2fs_warn(sbi, "Start checkpoint disabled!");
 	}
 	if (cpc->reason != CP_RESIZE)
-		down_write(&sbi->cp_global_sem);
-#if defined(CONFIG_UFSTW)
-	bdev_set_turbo_write(sbi->sb->s_bdev);
-#endif
+		mutex_lock(&sbi->cp_mutex);
 
 	if (!is_sbi_flag_set(sbi, SBI_IS_DIRTY) &&
 		((cpc->reason & CP_FASTBOOT) || (cpc->reason & CP_SYNC) ||
@@ -1616,11 +1606,9 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 	}
 
 	trace_f2fs_write_checkpoint(sbi->sb, cpc->reason, "start block_ops");
-
 #ifdef CONFIG_F2FS_BD_STAT
 	cp_begin = local_clock();
 #endif
-
 	err = block_operations(sbi);
 	if (err)
 		goto out;
@@ -1631,7 +1619,6 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 #ifdef CONFIG_F2FS_BD_STAT
 	cp_submit_end = local_clock();
 #endif
-
 	/* this is the case of multiple fstrims without any changes */
 	if (cpc->reason & CP_DISCARD) {
 		if (!f2fs_exist_trim_candidates(sbi, cpc)) {
@@ -1680,10 +1667,14 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 		goto stop;
 
 	f2fs_flush_sit_entries(sbi, cpc);
+#ifdef CONFIG_OPLUS_FEATURE_OF2FS
+	/* flush summary info in virtual log header */
+	store_virtual_curseg_summary(sbi);
+	restore_virtual_curseg_status(sbi, true);
+#endif
 #ifdef CONFIG_F2FS_BD_STAT
 	cp_flush_meta_time = local_clock() - cp_flush_meta_begin;
-
-	/* unlock all the fs_lock[] in do_checkpoint() */
+ 	/* unlock all the fs_lock[] in do_checkpoint() */
 	err = do_checkpoint(sbi, cpc, &cp_flush_meta_time);
 	if (err)
 		f2fs_release_discard_addrs(sbi);
@@ -1705,6 +1696,9 @@ int f2fs_write_checkpoint(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 		f2fs_clear_prefree_segments(sbi, cpc);
 #endif
 stop:
+#ifdef CONFIG_OPLUS_FEATURE_OF2FS
+	restore_virtual_curseg_status(sbi, false);
+#endif
 	unblock_operations(sbi);
 	stat_inc_cp_count(sbi->stat_info);
 
@@ -1715,11 +1709,8 @@ stop:
 	f2fs_update_time(sbi, CP_TIME);
 	trace_f2fs_write_checkpoint(sbi->sb, cpc->reason, "finish checkpoint");
 out:
-#if defined(CONFIG_UFSTW)
-	bdev_clear_turbo_write(sbi->sb->s_bdev);
-#endif
 	if (cpc->reason != CP_RESIZE)
-		up_write(&sbi->cp_global_sem);
+		mutex_unlock(&sbi->cp_mutex);
 #ifdef CONFIG_F2FS_BD_STAT
 	if (!err && cp_begin) {
 		cp_end = local_clock();
