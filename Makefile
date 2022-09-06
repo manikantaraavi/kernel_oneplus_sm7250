@@ -727,12 +727,6 @@ KBUILD_CFLAGS	+= -mllvm -polly \
 ifdef CONFIG_LD_DEAD_CODE_DATA_ELIMINATION
 KBUILD_CFLAGS	+= -mllvm -polly-run-dce
 endif
-
-ifdef CONFIG_INLINE_OPTIMIZATION
-KBUILD_CFLAGS	+= -mllvm -inline-threshold=600
-KBUILD_CFLAGS	+= -mllvm -inlinehint-threshold=750
-endif
-
 endif
 
 # Tell compiler to tune the performance of the code for a specified
