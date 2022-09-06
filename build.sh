@@ -76,7 +76,7 @@ DEFCONFIG=vendor/lito-perf_defconfig
 
 # Specify compiler.
 # 'clang' or 'gcc'
-COMPILER=clang
+COMPILER=gcc
 
 # Clean source prior building. 1 is NO(default) | 0 is YES
 INCREMENTAL=0
@@ -122,10 +122,10 @@ DISTRO=$(source /etc/os-release && echo ${NAME})
 	elif [ $COMPILER = "gcc" ]
 	then
 		msg "|| Cloning GCC 9.3.0 baremetal ||"
-		git clone --depth=1 https://github.com/mvaisakh/gcc-arm64.git gcc64
-		git clone --depth=1 https://github.com/arter97/arm32-gcc.git gcc32
-		GCC64_DIR=$KERNEL_DIR/gcc64
-		GCC32_DIR=$KERNEL_DIR/gcc32
+		git clone --depth=1 https://github.com/okta-10/gcc-arm32.git arm32
+	    git clone --depth=1 https://github.com/okta-10/gcc-arm64.git arm64
+		GCC64_DIR=$KERNEL_DIR/arm64 
+		GCC32_DIR=$KERNEL_DIR/arm32 
 	fi
 
 	msg "|| Cloning libufdt ||"
@@ -137,8 +137,8 @@ DISTRO=$(source /etc/os-release && echo ${NAME})
 ##----------Export more variables --------------------------------------------##
 
 exports() {
-	export KBUILD_BUILD_USER="prashant&Manikantaraavi"
-        export KBUILD_BUILD_HOST="prashant&Manikantaraavi"
+	export KBUILD_BUILD_USER="GhostOfAvicii"
+        export KBUILD_BUILD_HOST="Avicii"
 	export ARCH=arm64
 	export SUBARCH=arm64
 
@@ -199,7 +199,8 @@ build_kernel() {
 			CROSS_COMPILE=aarch64-elf- \
 			AR=aarch64-elf-ar \
 			OBJDUMP=aarch64-elf-objdump \
-			STRIP=aarch64-elf-strip
+			STRIP=aarch64-elf-strip \
+			DTC_EXT=$KERNEL_DIR/dtc
 		)
 	fi
 	
