@@ -49,10 +49,8 @@ $(warning Detected assembler with broken .inst; disassembly will be unreliable)
   endif
 endif
 
-ifeq ($(cc-name),clang)
-KBUILD_CFLAGS	+= -mno-implicit-float
-else
-KBUILD_CFLAGS	+= -mgeneral-regs-only
+# KBUILD_CFLAGS	+= -mno-implicit-float
+ifneq ($(cc-name),clang)
 ifeq ($(CONFIG_ARCH_LITO), y)
 KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55
 endif
